@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinMessageConverter", "WinMessageConverter\WinMessageConverter.csproj", "{4E07AE88-DC82-4793-8FBE-7186D88C1973}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7D1287A5-F072-4493-AF7B-DADCCABB94D7} = {7D1287A5-F072-4493-AF7B-DADCCABB94D7}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUserParser", "WinUserParser\WinUserParser.csproj", "{7D1287A5-F072-4493-AF7B-DADCCABB94D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E07AE88-DC82-4793-8FBE-7186D88C1973}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E07AE88-DC82-4793-8FBE-7186D88C1973}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E07AE88-DC82-4793-8FBE-7186D88C1973}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E07AE88-DC82-4793-8FBE-7186D88C1973}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D1287A5-F072-4493-AF7B-DADCCABB94D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D1287A5-F072-4493-AF7B-DADCCABB94D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D1287A5-F072-4493-AF7B-DADCCABB94D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D1287A5-F072-4493-AF7B-DADCCABB94D7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C702972-C436-4D80-A8C0-C8C4F30E5546}
+	EndGlobalSection
+EndGlobal
