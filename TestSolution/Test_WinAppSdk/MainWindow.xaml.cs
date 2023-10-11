@@ -18,76 +18,75 @@ using WinRT.Interop;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Test_WinAppSdk
+namespace Test_WinAppSdk;
+
+/// <summary>
+/// An empty window that can be used on its own or navigated to within a Frame.
+/// </summary>
+public sealed partial class MainWindow : Window
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainWindow : Window
+    private readonly SUBCLASSPROC subClassDelegate;
+    private readonly HWND hWnd;
+
+    public MainWindow()
     {
-        private readonly SUBCLASSPROC subClassDelegate;
-        private readonly HWND hWnd;
+        this.InitializeComponent();
 
-        public MainWindow()
+        hWnd = (HWND)WindowNative.GetWindowHandle(this);
+        subClassDelegate = new SUBCLASSPROC(NewSubWindowProc);
+
+        if (!PInvoke.SetWindowSubclass(hWnd, subClassDelegate, 0, 0))
+            throw new Win32Exception(Marshal.GetLastPInvokeError());
+
+        LayoutRoot.Loaded += (s, e) => RegisterConsumer();
+    }
+
+    private void RegisterConsumer()
+    {
+        foreach (TraceListener listener in Trace.Listeners)
         {
-            this.InitializeComponent();
-
-            hWnd = (HWND)WindowNative.GetWindowHandle(this);
-            subClassDelegate = new SUBCLASSPROC(NewSubWindowProc);
-
-            if (!PInvoke.SetWindowSubclass(hWnd, subClassDelegate, 0, 0))
-                throw new Win32Exception(Marshal.GetLastPInvokeError());
-
-            LayoutRoot.Loaded += (s, e) => RegisterConsumer();
-        }
-
-        private void RegisterConsumer()
-        {
-            foreach (TraceListener listener in Trace.Listeners)
+            if (listener is ViewTraceListener viewTraceListener)
             {
-                if (listener is ViewTraceListener viewTraceListener)
-                {
-                    viewTraceListener.RegisterConsumer(TraceCounsumer);
-                    return;
-                }
+                viewTraceListener.RegisterConsumer(TraceCounsumer);
+                return;
             }
-
-            TraceCounsumer.Document.SetText(TextSetOptions.None, "failed to find trace listener");
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        TraceCounsumer.Document.SetText(TextSetOptions.None, "failed to find trace listener");
+    }
+
+    private void Button_Click(object sender, RoutedEventArgs e)
+    {
+        TraceCounsumer.Document.SetText(TextSetOptions.None, string.Empty);
+    }
+
+    private LRESULT NewSubWindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        Trace.WriteLine(WinMsg.Format(uMsg, wParam, lParam));
+        
+        if (uMsg == PInvoke.WM_GETMINMAXINFO)
         {
-            TraceCounsumer.Document.SetText(TextSetOptions.None, string.Empty);
+            const double MinWidth = 660;
+            const double MinHeight = 500;
+
+            MINMAXINFO minMaxInfo = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            double scaleFactor = GetScaleFactor();
+            minMaxInfo.ptMinTrackSize.X = Math.Max(ConvertToDeviceSize(MinWidth, scaleFactor), minMaxInfo.ptMinTrackSize.X);
+            minMaxInfo.ptMinTrackSize.Y = Math.Max(ConvertToDeviceSize(MinHeight, scaleFactor), minMaxInfo.ptMinTrackSize.Y);
+            Marshal.StructureToPtr(minMaxInfo, lParam, true);
         }
 
-        private LRESULT NewSubWindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
-        {
-            Trace.WriteLine(WinMsg.Format(uMsg, wParam, lParam));
-            
-            if (uMsg == PInvoke.WM_GETMINMAXINFO)
-            {
-                const double MinWidth = 660;
-                const double MinHeight = 500;
+        return PInvoke.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
 
-                MINMAXINFO minMaxInfo = Marshal.PtrToStructure<MINMAXINFO>(lParam);
-                double scaleFactor = GetScaleFactor();
-                minMaxInfo.ptMinTrackSize.X = Math.Max(ConvertToDeviceSize(MinWidth, scaleFactor), minMaxInfo.ptMinTrackSize.X);
-                minMaxInfo.ptMinTrackSize.Y = Math.Max(ConvertToDeviceSize(MinHeight, scaleFactor), minMaxInfo.ptMinTrackSize.Y);
-                Marshal.StructureToPtr(minMaxInfo, lParam, true);
-            }
+    private static int ConvertToDeviceSize(double value, double scalefactor) => Convert.ToInt32(Math.Clamp(value * scalefactor, 0, short.MaxValue));
 
-            return PInvoke.DefSubclassProc(hWnd, uMsg, wParam, lParam);
-        }
+    private double GetScaleFactor()
+    {
+        if ((Content is not null) && (Content.XamlRoot is not null))
+            return Content.XamlRoot.RasterizationScale;
 
-        private static int ConvertToDeviceSize(double value, double scalefactor) => Convert.ToInt32(Math.Clamp(value * scalefactor, 0, short.MaxValue));
-
-        private double GetScaleFactor()
-        {
-            if ((Content is not null) && (Content.XamlRoot is not null))
-                return Content.XamlRoot.RasterizationScale;
-
-            double dpi = PInvoke.GetDpiForWindow(hWnd);
-            return dpi / 96.0;
-        }
+        double dpi = PInvoke.GetDpiForWindow(hWnd);
+        return dpi / 96.0;
     }
 }
