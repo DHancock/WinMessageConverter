@@ -2,9 +2,10 @@
 
  A .Net utility library that converts cryptic system window message codes to their string equivalents. Allows for simpler interpretation of debug trace output.
 
-![Untitled](https://github.com/DHancock/WinMessageConverter/assets/28826959/8ad3e742-94a9-41c3-970c-135e0e4cfbd2)
+![screenshot](https://github.com/DHancock/WinMessageConverter/assets/28826959/8c10d0a4-62e0-4534-a3dc-ea67fb4097cd)
 
- 
+This code is also available as a [nuget package](https://www.nuget.org/packages/AssyntSoftware.WinMessageConverter)
+
  ## API
 
 The library consists of a single static class [WinMsg](WinMessageConverter/WinMsg.cs) containing four functions.
