@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# github incorrectly detects the repository language as c because of WinUser.h header
+*.h linguist-detectable=false
