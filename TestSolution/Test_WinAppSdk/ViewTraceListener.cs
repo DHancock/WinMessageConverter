@@ -32,16 +32,6 @@ internal partial class ViewTraceListener : TraceListener
         {
             if (consumer is not null) 
             {
-                if (viewUpdateRequired && (scrollViewer is not null))
-                {
-                    viewUpdateRequired = !scrollViewer.ChangeView(0.0, scrollViewer.ExtentHeight, 1.0f);
-
-                    if (!viewUpdateRequired && (store.Length == 0))
-                    {
-                        dispatcherTimer.Stop();
-                    }
-                }
-
                 if (store.Length > 0)
                 {
                     int start = consumer.SelectionStart;
@@ -53,8 +43,17 @@ internal partial class ViewTraceListener : TraceListener
                     consumer.SelectionLength = length;
 
                     store.Clear();
-
                     viewUpdateRequired = true;
+                }
+
+                if (viewUpdateRequired && (scrollViewer is not null))
+                {
+                    viewUpdateRequired = !scrollViewer.ChangeView(0.0, scrollViewer.ExtentHeight, 1.0f);
+
+                    if (!viewUpdateRequired)
+                    {
+                        dispatcherTimer.Stop();
+                    }
                 }
             }
         }
