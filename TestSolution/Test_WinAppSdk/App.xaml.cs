@@ -32,6 +32,8 @@ namespace Test_WinAppSdk
         {
             m_window = new MainWindow();
             m_window.Activate();
+
+            m_window.Closed += (s, e) => Trace.Listeners.Remove(traceListener);
         }
 
         private Window? m_window;

@@ -21,10 +21,18 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <Grid.Resources>
+            <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+            <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+        </Grid.Resources>
+
         <!-- left, top, right, bottom -->
-
-        <RichEditBox x:Name="TraceCounsumer" Grid.Row="1" Margin="20,5,0,20" FontFamily="Consolas" FontSize="11" MaxLength="10240"/>
-
+        <Border Margin="20,5,0,20" CornerRadius="{ThemeResource ControlCornerRadius}" BorderThickness="1" BorderBrush="{ThemeResource ControlStrokeColorDefault}" Background="{ThemeResource ControlFillColorDefaultBrush}" >
+            <TextBox x:Name="TraceCounsumer" AcceptsReturn="True" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="11" MaxLength="10240" 
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </Border>
+        
         <Button Margin="20,20,0,20" Grid.Column="1" VerticalAlignment="Bottom" Content="Clear" Click="Button_Click"/>
 
     </Grid>

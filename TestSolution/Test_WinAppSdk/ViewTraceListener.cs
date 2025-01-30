@@ -1,6 +1,6 @@
-﻿using Microsoft.UI.Dispatching;
-using Microsoft.UI.Text;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 using System;
 using System.Diagnostics;
@@ -8,72 +8,112 @@ using System.Text;
 
 namespace Test_WinAppSdk;
 
-internal class ViewTraceListener : TraceListener
+internal partial class ViewTraceListener : TraceListener
 {
     private readonly object lockObject = new();
-    private StringBuilder? store;
-    private RichEditBox? consumer;
+    private readonly StringBuilder store;
+    private TextBox? consumer;
+    private ScrollViewer? scrollViewer;
+    private bool viewUpdateRequired;
+    private readonly DispatcherTimer dispatcherTimer;
 
     public ViewTraceListener() : base(nameof(ViewTraceListener))
     {
+        dispatcherTimer = new();
+        dispatcherTimer.Interval = TimeSpan.FromMilliseconds(100);
+        dispatcherTimer.Tick += DispatcherTimer_Tick;
+
+        store = new StringBuilder(1000);
     }
 
-    public void RegisterConsumer(RichEditBox textBox)
+    private void DispatcherTimer_Tick(object? sender, object e)
     {
         lock (lockObject)
         {
-            Debug.Assert(consumer is null && textBox.IsLoaded);
+            if (consumer is not null) 
+            {
+                if (viewUpdateRequired && (scrollViewer is not null))
+                {
+                    viewUpdateRequired = !scrollViewer.ChangeView(0.0, scrollViewer.ExtentHeight, 1.0f);
+
+                    if (!viewUpdateRequired && (store.Length == 0))
+                    {
+                        dispatcherTimer.Stop();
+                    }
+                }
+
+                if (store.Length > 0)
+                {
+                    int start = consumer.SelectionStart;
+                    int length = consumer.SelectionLength;
+
+                    consumer.Text += store.ToString();
+
+                    consumer.SelectionStart = start;
+                    consumer.SelectionLength = length;
+
+                    store.Clear();
+
+                    viewUpdateRequired = true;
+                }
+            }
+        }
+    }
+
+    public void RegisterConsumer(TextBox textBox)
+    {
+        lock (lockObject)
+        {
+            Debug.Assert(consumer is null);
+            Debug.Assert(textBox.IsLoaded);
 
             consumer = textBox;
 
-            if (store is not null)
-            {
-                if (store.Length > 0)
-                    WriteInternal(store.ToString());
+            scrollViewer = FindChild<ScrollViewer>(consumer);
+        }
+    }
 
-                store = null;
+    private static T? FindChild<T>(DependencyObject parent) where T : FrameworkElement
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int index = 0; index < count; index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, index);
+
+            if (child is T target)
+            {
+                return target;
+            }
+
+            T? result = FindChild<T>(child);
+
+            if (result is not null)
+            {
+                return result;
             }
         }
+
+        return null;
     }
 
     public override bool IsThreadSafe { get; } = true;
 
-    private void WriteInternal(string message)
-    {
-        const int cMaxStoreLength = 1024 * 10;
-
-        try
-        {
-            if (consumer is null)
-            {
-                store ??= new StringBuilder();
-
-                store.Append(message);
-
-                if (store.Length > cMaxStoreLength)
-                    store.Remove(0, cMaxStoreLength / 2);
-            }
-            else
-            {
-                consumer?.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-                {
-                    consumer.Document.GetText(TextGetOptions.UseObjectText, out string existing);
-                    consumer.Document.SetText(TextSetOptions.None, existing + message);
-                });
-            }
-        }
-        catch
-        {
-        }
-    }
-
     public override void Write(string? message)
     {
-        if (message is not null)
+        lock (lockObject)
         {
-            lock (lockObject)
+            try
             {
-                WriteInternal(message);
+                store.Append(message);
+
+                if (!dispatcherTimer.IsEnabled && (consumer is not null))
+                {
+                    dispatcherTimer.Start();
+                }
+            }
+            catch
+            {
             }
         }
     }
