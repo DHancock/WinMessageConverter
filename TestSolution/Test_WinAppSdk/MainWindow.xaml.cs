@@ -2,6 +2,8 @@ using AssyntSoftware.WinMessageConverter;
 
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 using System;
 using System.ComponentModel;
@@ -38,26 +40,29 @@ public sealed partial class MainWindow : Window
         if (!PInvoke.SetWindowSubclass(hWnd, subClassDelegate, 0, 0))
             throw new Win32Exception(Marshal.GetLastPInvokeError());
 
-        LayoutRoot.Loaded += (s, e) => RegisterConsumer();
+        RegisterConsumer();
     }
 
     private void RegisterConsumer()
     {
-        foreach (TraceListener listener in Trace.Listeners)
+        TraceCounsumer.Loaded += (s, e) =>
         {
-            if (listener is ViewTraceListener viewTraceListener)
+            foreach (TraceListener listener in Trace.Listeners)
             {
-                viewTraceListener.RegisterConsumer(TraceCounsumer);
-                return;
+                if (listener is ViewTraceListener viewTraceListener)
+                {
+                    viewTraceListener.RegisterConsumer(TraceCounsumer);
+                    return;
+                }
             }
-        }
 
-        TraceCounsumer.Document.SetText(TextSetOptions.None, "failed to find trace listener");
+            TraceCounsumer.Text = "failed to find trace listener";
+        };
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        TraceCounsumer.Document.SetText(TextSetOptions.None, string.Empty);
+        TraceCounsumer.Text = string.Empty;
     }
 
     private LRESULT NewSubWindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
