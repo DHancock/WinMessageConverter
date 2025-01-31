@@ -33,9 +33,22 @@ public partial class Form1 : Form
         const int WM_MOUSEMOVE = 0x0200;
         const int WM_NCMOUSEMOV = 0x00A0;
         const int WM_SETCURSOR = 0x0020;
+        const int WM_COMMAND = 0x0111;  // seems to be related to autoscrolling the text in a TextBox
 
-        if ((m.Msg != WM_NCHITTEST) && (m.Msg != WM_CTLCOLORSTATIC) && (m.Msg != WM_MOUSEMOVE) && (m.Msg != WM_NCMOUSEMOV) && (m.Msg != WM_SETCURSOR))
-            Trace.WriteLine(WinMsg.Format(m.Msg, m.WParam, m.LParam));
+        switch (m.Msg)
+        {
+            case WM_NCHITTEST: break;
+            case WM_CTLCOLORSTATIC: break;
+            case WM_MOUSEMOVE: break;
+            case WM_NCMOUSEMOV: break;
+            case WM_SETCURSOR: break;
+            case WM_COMMAND: break;
+            default:
+            {
+                Trace.WriteLine(WinMsg.Format(m.Msg, m.WParam, m.LParam));
+                break;
+            }
+        }
 
         base.WndProc(ref m);
     }

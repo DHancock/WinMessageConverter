@@ -39,11 +39,21 @@ public partial class MainWindow : Window
         const int WM_TIMER = 0x0113;
         const int WM_MOUSEMOVE = 0x0200;
         const int WM_NCMOUSEMOV = 0x00A0;
+        const int Unknown = 0x0060; // seems to be related to autoscrolling the text in a TextBox
 
-        handled = false;
-
-        if ((msg.message < WM_USER) && (msg.message != WM_TIMER) && (msg.message != WM_MOUSEMOVE) && (msg.message != WM_NCMOUSEMOV))
-            Trace.WriteLine(WinMsg.Format(msg.message, msg.wParam, msg.lParam));
+        switch (msg.message)
+        {
+            case > WM_USER: break;
+            case WM_TIMER: break;
+            case WM_MOUSEMOVE: break;
+            case WM_NCMOUSEMOV: break;
+            case Unknown: break;
+            default:
+            {
+                Trace.WriteLine(WinMsg.Format(msg.message, msg.wParam, msg.lParam));
+                break;
+            }
+        }
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)

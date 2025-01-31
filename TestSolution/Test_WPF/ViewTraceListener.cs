@@ -1,76 +1,79 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace Test_WPF;
 
-internal class ViewTraceListener : TraceListener
+internal partial class ViewTraceListener : TraceListener
 {
-    private readonly object lockObject = new();
-    private StringBuilder? store;
+    private readonly Lock lockObject;
+    private readonly StringBuilder store;
     private TextBox? consumer;
+    private readonly DispatcherTimer dispatcherTimer;
 
     public ViewTraceListener() : base(nameof(ViewTraceListener))
     {
+        lockObject = new Lock();
+
+        dispatcherTimer = new DispatcherTimer();
+        dispatcherTimer.Interval = TimeSpan.FromMilliseconds(100);
+        dispatcherTimer.Tick += DispatcherTimer_Tick;
+
+        store = new StringBuilder(1000);
+    }
+
+    private void DispatcherTimer_Tick(object? sender, object e)
+    {
+        lock (lockObject)
+        {
+            if (consumer is not null)
+            {
+                int start = consumer.SelectionStart;
+                int length = consumer.SelectionLength;
+
+                consumer.AppendText(store.ToString());
+                consumer.ScrollToEnd();
+
+                consumer.SelectionStart = start;
+                consumer.SelectionLength = length;
+
+                store.Clear();
+                dispatcherTimer.Stop();
+            }
+        }
     }
 
     public void RegisterConsumer(TextBox textBox)
     {
         lock (lockObject)
         {
-            Debug.Assert(consumer is null && textBox.IsInitialized);
+            Debug.Assert(consumer is null);
+            Debug.Assert(textBox.IsLoaded);
 
             consumer = textBox;
-
-            if (store is not null)
-            {
-                if (store.Length > 0)
-                    WriteInternal(store.ToString());
-
-                store = null;
-            }
         }
     }
 
-    public override bool IsThreadSafe { get; } = true;
-
-    private void WriteInternal(string message)
-    {
-        const int cMaxStoreLength = 1024 * 10;
-
-        try
-        {
-            if (consumer is null)
-            {
-                store ??= new StringBuilder();
-                store.Append(message);
-
-                if (store.Length > cMaxStoreLength)
-                    store.Remove(0, cMaxStoreLength / 2);
-            }
-            else
-            {
-                consumer.Dispatcher.BeginInvoke(() =>
-                {
-                    consumer.Text += message;
-                },
-                DispatcherPriority.Background);
-            }
-        }
-        catch 
-        {
-        }
-    }
+    public override bool IsThreadSafe => true;
 
     public override void Write(string? message)
     {
-        if (message is not null)
+        lock (lockObject)
         {
-            lock (lockObject)
+            try
             {
-                WriteInternal(message);
+                store.Append(message);
+
+                if (!dispatcherTimer.IsEnabled && (consumer is not null))
+                {
+                    dispatcherTimer.Start();
+                }
+            }
+            catch
+            {
             }
         }
     }
