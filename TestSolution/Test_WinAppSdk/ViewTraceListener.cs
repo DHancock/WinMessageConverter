@@ -14,7 +14,6 @@ internal partial class ViewTraceListener : TraceListener
     private readonly StringBuilder store;
     private TextBox? consumer;
     private ScrollViewer? scrollViewer;
-    private bool viewUpdateRequired;
     private readonly DispatcherTimer dispatcherTimer;
 
     public ViewTraceListener() : base(nameof(ViewTraceListener))
@@ -30,7 +29,7 @@ internal partial class ViewTraceListener : TraceListener
     {
         lock (lockObject)
         {
-            if (consumer is not null) 
+            if ((consumer is not null) && (scrollViewer is not null)) 
             {
                 if (store.Length > 0)
                 {
@@ -43,17 +42,11 @@ internal partial class ViewTraceListener : TraceListener
                     consumer.SelectionLength = length;
 
                     store.Clear();
-                    viewUpdateRequired = true;
                 }
 
-                if (viewUpdateRequired && (scrollViewer is not null))
+                if (scrollViewer.ChangeView(0.0, scrollViewer.ExtentHeight, 1.0f))
                 {
-                    viewUpdateRequired = !scrollViewer.ChangeView(0.0, scrollViewer.ExtentHeight, 1.0f);
-
-                    if (!viewUpdateRequired)
-                    {
-                        dispatcherTimer.Stop();
-                    }
+                    dispatcherTimer.Stop();
                 }
             }
         }
