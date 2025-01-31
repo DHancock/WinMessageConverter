@@ -5,12 +5,13 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace Test_WinAppSdk;
 
 internal partial class ViewTraceListener : TraceListener
 {
-    private readonly object lockObject = new();
+    private readonly Lock lockObject;
     private readonly StringBuilder store;
     private TextBox? consumer;
     private ScrollViewer? scrollViewer;
@@ -18,7 +19,9 @@ internal partial class ViewTraceListener : TraceListener
 
     public ViewTraceListener() : base(nameof(ViewTraceListener))
     {
-        dispatcherTimer = new();
+        lockObject = new Lock();
+
+        dispatcherTimer = new DispatcherTimer();
         dispatcherTimer.Interval = TimeSpan.FromMilliseconds(100);
         dispatcherTimer.Tick += DispatcherTimer_Tick;
 
