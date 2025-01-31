@@ -2,15 +2,13 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="AssyntSoftware.WinMessageConverter">
-      <HintPath>..\..\WinMessageConverter\bin\$(Configuration)\net6.0\AssyntSoftware.WinMessageConverter.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\WinMessageConverter\WinMessageConverter.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -3,70 +3,72 @@ using System.Text;
 
 namespace Test_WinForms;
 
-internal class ViewTraceListener : TraceListener
+internal partial class ViewTraceListener : TraceListener
 {
-    private readonly object lockObject = new();
-    private StringBuilder? store;
+    private readonly Lock lockObject;
+    private readonly StringBuilder store;
     private TextBox? consumer;
+    private readonly System.Windows.Forms.Timer timer;
 
     public ViewTraceListener() : base(nameof(ViewTraceListener))
     {
+        lockObject = new Lock();
+
+        timer = new System.Windows.Forms.Timer();
+        timer.Interval = 100;
+        timer.Tick += Timer_Tick;
+
+        store = new StringBuilder(1000);
+    }
+
+    private void Timer_Tick(object? sender, EventArgs e)
+    {
+        lock (lockObject)
+        {
+            if (consumer is not null)
+            {
+                int start = consumer.SelectionStart;
+                int length = consumer.SelectionLength;
+
+                consumer.AppendText(store.ToString());
+
+                consumer.SelectionStart = start;
+                consumer.SelectionLength = length;
+
+                store.Clear();
+                timer.Stop();
+            }
+        }
     }
 
     public void RegisterConsumer(TextBox textBox)
     {
         lock (lockObject)
         {
-            Debug.Assert(consumer is null && textBox.Created);
+            Debug.Assert(consumer is null);
+            Debug.Assert(textBox.IsHandleCreated);
 
             consumer = textBox;
-
-            if (store is not null)
-            {
-                if (store.Length > 0)
-                    WriteInternal(store.ToString());
-
-                store = null;
-            }
         }
     }
 
-    public override bool IsThreadSafe { get; } = true;
-
-    private void WriteInternal(string message)
-    {
-        const int cMaxStoreLength = 1024 * 10;
-
-        try
-        {
-            if (consumer is null)
-            {
-                store ??= new StringBuilder();
-                store.Append(message);
-
-                if (store.Length > cMaxStoreLength)
-                    store.Remove(0, cMaxStoreLength / 2);
-            }
-            else
-            {
-                consumer.BeginInvoke(() =>
-                {
-                    consumer.Text += message;
-                });
-            }
-        }
-        catch 
-        {
-        }
-    }
+    public override bool IsThreadSafe => true;
 
     public override void Write(string? message)
     {
-        if (message is not null)
+        lock (lockObject)
         {
-            lock (lockObject)
+            try
             {
-                WriteInternal(message);
+                store.Append(message);
+
+                if (!timer.Enabled && (consumer is not null))
+                {
+                    timer.Start();
+                }
+            }
+            catch
+            {
             }
         }
     }
