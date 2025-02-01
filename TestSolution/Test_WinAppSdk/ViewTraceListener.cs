@@ -63,8 +63,12 @@ internal partial class ViewTraceListener : TraceListener
             Debug.Assert(textBox.IsLoaded);
 
             consumer = textBox;
-
             scrollViewer = FindChild<ScrollViewer>(consumer);
+
+            if (store.Length > 0)
+            {
+                dispatcherTimer.Start();
+            }
         }
     }
 

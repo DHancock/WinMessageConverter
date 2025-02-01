@@ -54,6 +54,11 @@ internal partial class ViewTraceListener : TraceListener
             Debug.Assert(textBox.IsLoaded);
 
             consumer = textBox;
+
+            if (store.Length > 0)
+            {
+                dispatcherTimer.Start();
+            }
         }
     }
 
