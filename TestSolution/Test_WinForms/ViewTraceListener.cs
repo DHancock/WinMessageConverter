@@ -49,6 +49,11 @@ internal partial class ViewTraceListener : TraceListener
             Debug.Assert(textBox.IsHandleCreated);
 
             consumer = textBox;
+
+            if (store.Length > 0)
+            {
+                timer.Start();
+            }
         }
     }
 
